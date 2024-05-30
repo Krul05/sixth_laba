@@ -1,13 +1,11 @@
 <component name="ArtifactManager">
-  <artifact name="sixth_laba:jar">
+  <artifact type="jar" name="sixth_laba:jar">
     <output-path>$PROJECT_DIR$/out/artifacts/sixth_laba_jar</output-path>
-    <root id="root">
-      <element id="archive" name="sixth_laba.jar">
-        <element id="directory" name="META-INF">
-          <element id="file-copy" path="$PROJECT_DIR$/src/Client/META-INF/MANIFEST.MF" />
-        </element>
-        <element id="module-output" name="sixth_laba" />
+    <root id="archive" name="sixth_laba.jar">
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/src/Client/META-INF/MANIFEST.MF" />
       </element>
+      <element id="module-output" name="sixth_laba" />
     </root>
   </artifact>
 </component>
