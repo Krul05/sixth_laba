@@ -24,13 +24,19 @@ public class ClientMain {
                 return;
             }
             try {
-                client.send(s);
-                Response response = (Response) client.read().readObject();
-                String answer = response.getResponse();
-                if (answer.equals("exit")) {
-                    flag = false;
+
+                if (s.getName().equals("execute_script")) {
+                    ExecuteScript executeScript = new ExecuteScript(client);
+                    executeScript.action((String) s.getArgument());
                 } else {
-                    console.println(answer);
+                    client.send(s);
+                    Response response = (Response) client.read().readObject();
+                    String answer = response.getResponse();
+                    if (answer.equals("exit")) {
+                        flag = false;
+                    } else {
+                        console.println(answer);
+                    }
                 }
 
             } catch (SocketException e) {

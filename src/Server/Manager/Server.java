@@ -8,6 +8,7 @@ import java.io.*;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
+import java.nio.channels.Selector;
 import java.util.logging.*;
 
 public class Server {
@@ -17,6 +18,22 @@ public class Server {
 
     public Server(int SERVICE_PORT) throws IOException {
         this.SERVICE_PORT = SERVICE_PORT;
+    }
+
+    public DatagramChannel getDc() {
+        return dc;
+    }
+
+    public void send(Response response) throws IOException {
+        ByteBuffer buffer = ByteBuffer.allocate(4096);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(baos);
+        oos.writeObject(response);
+        byte[] responseBytes = baos.toByteArray();
+        buffer.clear();
+        buffer.put(responseBytes);
+        buffer.flip();
+        dc.send(buffer, senderAddress);
     }
 
     public void init(File file) throws IOException {
@@ -41,7 +58,6 @@ public class Server {
         CommandManager commandManager = new CommandManager(this, collection);
         BufferedReader console = new BufferedReader(new InputStreamReader(System.in));
 
-        Response response;
         while (true) {
             if (console.ready()) {
                 String input = console.readLine();
@@ -50,29 +66,23 @@ public class Server {
                     save.action(collection.getFile());
                 }
             }
+
                 try {
                     ByteBuffer buffer = ByteBuffer.allocate(4096);
                     senderAddress =  (InetSocketAddress) dc.receive(buffer);
+                    Commands receivedMessage = null;
                     if(senderAddress != null){
                         LOGGER.log(Level.INFO,"Сервер получил данные от клиента");
                         buffer.flip();
                         ByteArrayInputStream bais = new ByteArrayInputStream(buffer.array(), 0, buffer.limit());
                         ObjectInputStream ois = new ObjectInputStream(bais);
-                        Commands receivedMessage = (Commands) ois.readObject();
+                        receivedMessage = (Commands) ois.readObject();
                         LOGGER.log(Level.INFO,"Данные десериализированы");
-                        response = new Response(commandManager.commandManage(receivedMessage));
-                        LOGGER.log(Level.INFO,"Команда выполнена");
-                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                        ObjectOutputStream oos = new ObjectOutputStream(baos);
-                        oos.writeObject(response);
-                        LOGGER.log(Level.INFO,"Ответ клиенту сериализированы");
-                        byte[] responseBytes = baos.toByteArray();
-                        buffer.clear();
-                        buffer.put(responseBytes);
-                        buffer.flip();
-                        dc.send(buffer, senderAddress);
-                        LOGGER.log(Level.INFO,"Данные клиенту отправлены");
                     }
+                    if (receivedMessage!=null) {
+                        commandManager.commandManage(receivedMessage);
+                    }
+
 
                 } catch (ClassNotFoundException e) {
                     LOGGER.log(Level.WARNING,"Произошла ошибка");
